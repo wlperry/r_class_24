@@ -4,78 +4,80 @@ library(janitor)
 library(tidyverse)
 library(patchwork)
 
+x <- 7
+x
+y <- 4 
+x+y
+
 # load data from maggie ----
-m.df <- read_excel("data/Maddie/wlp_modified_Mouse_Trapping_Data.xlsx")
-
-# to fix the manual NA values
-m.df <- read_excel("data/Maddie/wlp_modified_Mouse_Trapping_Data.xlsx",
+m.df <- read_excel("data/Maddie/wlp_modified_Mouse_Trapping_Data.xlsx", 
                    na="NA")
-
-write_csv(m.df, "output/Maddie/mice.csv")
-
-m.df <- m.df |> 
-  mutate(island_size_category = case_when(
-    islandsize < 7300 ~ "Small",
-    islandsize >= 7300 & islandsize < 9050000 ~ "Medium",
-    islandsize >= 9050000 ~ "Large",
-    TRUE ~ "Other"))
-
-m.df <- m.df |> 
-  mutate(island_dist_category = case_when(
-    distance < 5000 ~ "near",
-    distance >= 5000 & distance < 7500 ~ "far",
-    distance >= 7500 ~ "distant",
-    TRUE ~ "Other"))
-
-
 
 # BASIC PLOTS ------ -- -- - - - - -------- 
 # so we have some data in here and we want to look at what it says by island
 m.df |> 
   ggplot(aes(x=sampling_site, y=weight_total_grams, color=sampling_site))+
+  geom_boxplot()+
   geom_point()
 
 # we could switch the x and y axes
 m.df |> 
   ggplot(aes(y=sampling_site, x=weight_total_grams, color=sampling_site))+
-  geom_point()
+  geom_point()+
+  geom_boxplot()
 
 # we could also use coord_flip
 m.df |> 
   ggplot(aes(x=sampling_site, y=weight_total_grams, color=sampling_site))+
-  geom_point() + coord_flip()
+  geom_point() 
+
 
 # what if we wanted to see all the hidden points
+# NOw how can you use - (position = position_dodge2(width = 0.3)
 m.df |> 
   ggplot(aes(y=sampling_site, x=weight_total_grams, color=sampling_site))+
-  geom_point(position = position_dodge2(width = 0.3))
-
+  geom_point(position = position_dodge2(width = 0.5))   
+  
+  
 # Histogram PLOTS ------ -- -- - - - - -------- 
 # what if you wanted a hisyogram of the weights
 m.df |> 
   ggplot(aes(y=weight_total_grams, fill=sampling_site))+
-  geom_histogram() 
+  geom_histogram()
+
+
 
 # how to see all the sites individually
 m.df |> 
   ggplot(aes(y=weight_total_grams, fill=sampling_site))+
-  geom_histogram()  +
+  geom_histogram()+
   facet_wrap(.~sampling_site)
+
+
+
 
 
 # Mean and Standard error plots  - - - - - - - - - - - ------------------
 # what if we wanted to see the mean and the standard error
 m.df |> 
-  ggplot(aes(y=sampling_site, x=weight_total_grams, color=sampling_site))+
-  stat_summary(fun=mean, geom = "point")+
+  ggplot(aes(y=sampling_site, x=weight_total_grams, fill=sampling_site))+
+  stat_summary(fun=mean, geom = "bar")+
   stat_summary(fun.data = mean_se, geom = "errorbar", width = .2)
 
 # so now we want to change the look and feel of the data
 m.df |> 
   ggplot(aes(y=sampling_site, x=weight_total_grams, color=sampling_site))+
   stat_summary(fun=mean, geom = "point")+
-  stat_summary(fun.data = mean_se, geom = "errorbar", width = .2)+
-  theme_classic()
+  stat_summary(fun.data = mean_se, geom = "errorbar", width = .2) +
+  theme_light() + 
+  theme(axis.line = element_line(linetype = "solid"),
+    panel.grid.major = element_line(colour = "hotpink1",
+        linetype = "dashed"), panel.grid.minor = element_line(colour = "lightpink2"),
+    axis.text = element_text(size = 16, face = "bold"),
+    panel.background = element_rect(fill = "aquamarine2"))
+
+# install.packages("ggThemeAssist")
+# library(ggThemeAssist)
 
 # we can also make our own theme 
 # and we only change one place rather than each plot
@@ -84,7 +86,6 @@ theme_mice <- function(
     base_size = 14,  # really important to scale for big and small plots
     base_family = "sans") # sets the type of general font
           {theme(
-            
             # panel stuff
             panel.grid.major = element_line(linetype = "blank"),
             panel.grid.minor = element_line(linetype = "blank"),
@@ -108,28 +109,31 @@ theme_mice <- function(
 
 # now we can apply our theme
 m.df |> 
-  ggplot(aes(y=sampling_site, x=weight_total_grams, color=sampling_site))+
+  ggplot(aes(y=log10(islandsize+1), x=weight_total_grams, color=sampling_site))+
   stat_summary(fun=mean, geom = "point")+
   stat_summary(fun.data = mean_se, geom = "errorbar", width = .2)+
   theme_mice()
+
+
 
 # we can also set up the scale color manual settings
 # colors
 # get the name
 unique(m.df$sampling_site)
 
+
 scale_color <- scale_color_manual(
   name = "Location",
-  labels = c( "Mandarte Island"   = "Mandarte Island" ,   
-              "Vancouver Island"  = "Vancouver Island" ,  
-              "Sidney Island"     = "Sidney Island"   ,   
-              "North Pender"      = "North Pender"     ,  
-              "D'Arcy Island"     = "D'Arcy Island"   ,   
-              "Saturna Island"    = "Saturna Island"   ,  
-              "Vancouver"         = "Vancouver"       ,   
-              "Saltspring Island" = "Saltspring Island",  
-              "Portland Island"   = "Portland Island" ,   
-              "South Pender"      = "South Pender"),
+  labels = c( "Mandarte Island"    = "Mandarte" ,   
+              "Vancouver Island"   = "Vancouver " ,  
+              "Sidney Island"      = "Sidney "   ,   
+              "North Pender"       = "North Pender"     ,  
+              "D'Arcy Island"      = "D'Arcy "   ,   
+              "Saturna Island"     = "Saturna "   ,  
+              "Vancouver"          = "Vancouver"       ,   
+              "Saltspring Island"  = "Saltspring ",  
+              "Portland Island"    = "Portland " ,   
+              "South Pender"       = "South Pender"),
   values = c( "Mandarte Island"   = "black"      ,  
               "Vancouver Island"  = "blue"       ,  
               "Sidney Island"     = "goldenrod1" ,   
@@ -145,31 +149,39 @@ scale_color <- scale_color_manual(
 m.df |> 
   ggplot(aes(y=sampling_site, x=weight_total_grams, color=sampling_site))+
   stat_summary(fun=mean, geom = "point")+
-  stat_summary(fun.data = mean_se, geom = "errorbar", width = .2)+
-  scale_color+
+  stat_summary(fun.data = mean_se, geom = "errorbar", width = .2) +
+  scale_color +
   theme_mice()
+
+
+
+
 
 # now lets make sampling_site a factor
 m.df <- m.df |> 
-  mutate(sampling_site = as.factor(sampling_site))
+  mutate(sampling_site = as.factor(sampling_site),
+         islandsize_factor = as.factor(islandsize))
 
-
-# now order the points by weight_total_grams in decreasing order for the samplign_site using forecats and fct_reorder decreasing
-m.df |> 
-  ggplot(aes(y=fct_reorder(sampling_site, weight_total_grams, .desc = FALSE), 
-             x=weight_total_grams, color=sampling_site))+
-  stat_summary(fun=mean, geom = "point")+
-  stat_summary(fun.data = mean_se, geom = "errorbar", width = .2)+
-  scale_color+
-  theme_mice()
-
-# what if we wanted to make a manaul order of factors....
 m.df <- m.df |> 
-  mutate(sampling_site = fct_relevel(sampling_site, 
+  mutate(sampling_site = 
+           fct_relevel(sampling_site,
+                                     "Vancouver", "Saltspring Island","Vancouver Island",
+                                     "North Pender","Sidney Island","Mandarte Island",
+                                     "Saturna Island", "Portland Island",
+                                     "D'Arcy Island", "South Pender" ))
+         
+# what if we wanted to make a manual order of factors....
+fct_relevel(sampling_site,
             "Vancouver", "Saltspring Island","Vancouver Island",
             "North Pender","Sidney Island","Mandarte Island",
-            "Saturna Island", "Portland Island",   
-            "D'Arcy Island", "South Pender" ))
+            "Saturna Island", "Portland Island",
+            "D'Arcy Island", "South Pender" )
+
+m.df <- m.df 
+
+
+
+
 
 # Now the plot will be ordered but the factors above
 m.df |> 
@@ -189,6 +201,7 @@ m.df |>
   scale_color+
   theme_mice()
 
+# we coould change another way or vary on other variables
 m.df |> 
   ggplot(aes(y=fct_reorder(sampling_site, islandsize, .desc = TRUE, .na_rm = TRUE), 
              x=weight_total_grams, color=sampling_site))+
@@ -198,10 +211,28 @@ m.df |>
   theme_mice()
 
 
-# Ok Now how can we work with the datsframe to make changes to values
+# Ok Now how can we work with the dataframe to make changes to values
 # note that we have weights total with bag and weight of bag but no mouse weight
 
 # we can use mutate to calculate this
 m.df <- m.df |> 
   mutate(mouse_wt_g = weight_total_grams - weight_bag_grams)
+
+# we can also look at only certain bits of data and ave for later using filter
+
+
+
+
+
+# we can also retain or remove columns we dont want anymore
+
+
+
+
+# we can also do all the math you want - how can we summarize data....
+# group_by
+
+
+
+
 
